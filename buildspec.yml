@@ -3,24 +3,26 @@ version: 0.2
 phases:
   install:
     commands:
+      - echo 'install step'
       - aws --version
       - aws sts get-caller-identity
-      - kubectl version --short --client     
-      - printenv REPOSITORY_NAME
-      - echo $REPOSITORY_NAME
-      - printenv REPOSITORY_BRANCH
-      - echo $REPOSITORY_BRANCH
-      - echo 'install step'
+      - kubectl version --short --client
   pre_build:
       commands:
       - echo 'pre_build step'
+      - TAG="$REPOSITORY_NAME.$REPOSITORY_BRANCH.$ENVIRONMENT_NAME.$(date +%Y-%m-%d.%H.%M.%S).$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | head -c 8)"
+      - sed -i 's@CONTAINER_IMAGE@'"$REPOSITORY_URI:$TAG"'@' hello-k8s.yml
+      - $(aws ecr get-login --no-include-email)
+      - export KUBECONFIG=$HOME/.kube/config
   build:
     commands:
       - echo 'build step'
+      - docker build --tag $REPOSITORY_URI:$TAG .
 
   post_build:
     commands:
       - echo 'post_build step'
-      - printf '[{"name":"hello-k8s","imageUri":"%s"}]' 'uri' > build.json
+      - docker push $REPOSITORY_URI:$TAG
+      - printf '[{"name":"hello-k8s","imageUri":"%s"}]' $REPOSITORY_URI:$TAG > build.json
 artifacts:
   files: build.json
