@@ -4,7 +4,7 @@ phases:
   install:
     commands:
       - echo 'install step'
-      - yum upgrade
+      - yum upgrade -y
       - aws --version
       - aws sts get-caller-identity
       - kubectl version --short --client
