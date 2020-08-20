@@ -8,6 +8,7 @@ phases:
       - aws sts get-caller-identity
       - kubectl version --short --client
       - docker --version
+      - node --version
   pre_build:
       commands:
       - echo 'pre_build step'
